@@ -1,0 +1,3 @@
+Micaela,Marquiegui,123,B-
+Diego,Barron,456,B-
+Fuat,Encinas,789,O-
