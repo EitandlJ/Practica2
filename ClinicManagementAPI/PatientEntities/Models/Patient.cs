@@ -6,6 +6,7 @@
         public string Name { get; set; }
         public string LastName { get; set; }
         public string BloodGroup { get; set; }
+        public string Code { get; set; }
 
         public Patient() 
         {

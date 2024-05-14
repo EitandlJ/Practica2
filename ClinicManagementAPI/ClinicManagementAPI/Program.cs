@@ -3,7 +3,15 @@ using UPB.PatientEntities.Managers;
 using UPB.ClinicManagementAPI.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
-
+// Configurar HttpClient para ignorar los problemas de certificados SSL
+builder.Services.AddHttpClient("Practice3Client", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:5001/");
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+});
 
 builder.Configuration
     .AddJsonFile("appsettings.json")
@@ -18,6 +26,7 @@ builder.Services.AddTransient<PatientManager>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 var app = builder.Build();
 if (app.Environment.EnvironmentName == "QA")
