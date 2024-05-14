@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Serilog;
 using UPB.PatientEntities.Managers.Exceptions;
 using UPB.PatientEntities.Models;
+using Newtonsoft.Json;
 
 namespace UPB.PatientEntities.Managers
 {
@@ -40,25 +41,57 @@ namespace UPB.PatientEntities.Managers
             _httpClient = httpClientFactory.CreateClient("Practice3Client");
         }
 
-        public async Task<Patient> CreatePatientAsync(Patient patientToCreate)
+       public async Task<Patient> CreatePatient(Patient patient)
         {
-            // Crear la solicitud para Practice3
-            var response = await _httpClient.PostAsJsonAsync("api/PatientController1/GeneratePatientCode", new
-            {
-                CI = patientToCreate.CI,
-                Name = patientToCreate.Name,
-                LastName = patientToCreate.LastName,
-                BloodGroup = patientToCreate.GetRandomBloodGroup(),
-            }) ;
-            response.EnsureSuccessStatusCode();
+            // Generamos el código de paciente llamando al servicio del Practice 3
+            string patientCode = await GeneratePatientCodeAsync(patient.Name, patient.LastName, patient.CI);
+            patient.BloodGroup = patient.GetRandomBloodGroup();
+            // Asignamos el código de paciente generado
+            patient.Code = patientCode;
 
-            // Obtener el código de paciente de la respuesta
-            var result = await response.Content.ReadFromJsonAsync<PatientCodeResponse>();
-            patientToCreate.Code = result.PatientCode;
-
-            _patients.Add(patientToCreate.CI, patientToCreate);
+            // Agregamos el paciente a la lista
+            _patients.Add(patient.CI, patient);
             EscribirPacientesEnArchivo();
-            return patientToCreate;
+            // Retornamos el paciente creado
+            return patient;
+        }
+
+        public async Task<string> GeneratePatientCodeAsync(string name, string lastName, int ci)
+        {
+            // Construimos la URL del servicio en Practice 3
+            string practice3BaseUrl = _configuration.GetSection("Practice3BaseUrl").Value;
+            string generateCodeEndpoint = "api/PatientController1";
+
+            // Creamos el objeto que contiene la información del paciente
+            var patientInfo = new { Name = name, LastName = lastName, CI = ci };
+
+            // Serializamos el objeto a JSON
+            var jsonPatientInfo = JsonConvert.SerializeObject(patientInfo);
+
+            // Creamos el contenido de la solicitud HTTP
+            var content = new StringContent(jsonPatientInfo, System.Text.Encoding.UTF8, "application/json");
+
+            // Realizamos la solicitud HTTP POST al servicio de Practice 3
+            var response = await _httpClient.PostAsync($"{practice3BaseUrl}/{generateCodeEndpoint}", content);
+
+            // Verificamos si la solicitud fue exitosa
+            if (response.IsSuccessStatusCode)
+            {
+                // Leemos la respuesta como texto
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                // Deserializamos la respuesta para obtener el código de paciente
+                var responseObject = JsonConvert.DeserializeAnonymousType(responseContent, new { PatientCode = "" });
+
+
+                // Retornamos el código de paciente generado
+                return responseObject.PatientCode;
+            }
+            else
+            {
+                // Si la solicitud no fue exitosa, lanzamos una excepción o manejamos el error según sea necesario
+                throw new HttpRequestException($"Error al generar el código de paciente: {response.StatusCode}");
+            }
         }
 
         public string UpdatePatient(int ci, string name, string lastName)

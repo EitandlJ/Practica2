@@ -1,3 +1,5 @@
-Micaela,Marquiegui,123,B-
-Diego,Barron,456,B-
-Fuat,Encinas,789,O-
+Micaela,Marquiegui,123,B-,
+Diego,Barron,456,B-,
+Fuat,Encinas,789,O-,
+Eitan,de la Jaille,12345,string,ED-12345
+string,string,0,AB-,SS-0

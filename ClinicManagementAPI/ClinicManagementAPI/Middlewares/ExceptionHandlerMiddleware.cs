@@ -31,7 +31,7 @@ namespace UPB.ClinicManagementAPI.Middlewares
         {
 
 
-            string errorBodyJSON = $" Mesage = {ex.Message}, \r\n ";
+            string errorBodyJSON = $" Message = {ex.Message}, \r\n ";
             return httpcontext.Response.WriteAsync(errorBodyJSON);
         }
     }

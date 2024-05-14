@@ -20,7 +20,7 @@ namespace UPB.ClinicManagementAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Patient patient)
         {
-            var createdPatient = await _patientManager.CreatePatientAsync(patient);
+            var createdPatient = await _patientManager.CreatePatient(patient);
             return CreatedAtAction(nameof(GetByCI), new { ci = createdPatient.CI }, createdPatient);
         }
 
